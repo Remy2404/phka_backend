@@ -1,0 +1,102 @@
+erDiagram
+    users {
+        bigint id PK
+        varchar name
+        varchar email UK
+        varchar phone
+        enum skin_type
+        int loyalty_points
+        boolean is_active
+    }
+
+    categories {
+        bigint id PK
+        varchar name
+        varchar slug UK
+        bigint parent_id FK
+        boolean is_active
+    }
+
+    products {
+        bigint id PK
+        varchar name
+        varchar slug UK
+        varchar sku UK
+        decimal price
+        bigint category_id FK
+        varchar brand
+        boolean is_featured
+        boolean is_active
+        decimal rating
+    }
+
+    product_variants {
+        bigint id PK
+        bigint product_id FK
+        varchar sku UK
+        decimal price
+        int stock_quantity
+        json attributes
+        boolean is_active
+    }
+
+    addresses {
+        bigint id PK
+        bigint user_id FK
+        enum type
+        varchar city
+        varchar country
+        boolean is_default
+    }
+
+    orders {
+        bigint id PK
+        varchar order_number UK
+        bigint user_id FK
+        enum status
+        decimal total
+        bigint billing_address_id FK
+        bigint shipping_address_id FK
+        enum payment_status
+    }
+
+    shopping_cart {
+        bigint id PK
+        bigint user_id FK
+    }
+
+    beauty_quizzes {
+        bigint id PK
+        varchar title
+        enum skin_type_focus
+        boolean is_active
+    }
+
+    community_posts {
+        bigint id PK
+        bigint user_id FK
+        longtext content
+        int like_count
+        int comment_count
+    }
+
+    %% Core Relationships
+    users ||--o{ addresses : "manages"
+    users ||--o{ orders : "places"
+    users ||--o{ shopping_cart : "has"
+    users ||--o{ community_posts : "creates"
+
+    categories ||--o{ categories : "parent"
+    categories ||--o{ products : "contains"
+
+    products ||--o{ product_variants : "variants"
+    products ||--o{ orders : "ordered in"
+
+    orders }o--|| addresses : "billing"
+    orders }o--|| addresses : "shipping"
+
+    shopping_cart ||--o{ products : "contains"
+
+    beauty_quizzes ||--o{ users : "taken by"
+
+    community_posts ||--o{ users : "liked by"
