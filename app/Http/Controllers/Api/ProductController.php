@@ -20,7 +20,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'variants', 'reviews'])
+        $query = Product::with(['category', 'variants', 'reviews', 'images'])
             ->active()
             ->inStock();
 
@@ -114,7 +114,8 @@ class ProductController extends Controller
             'reviews' => function($query) {
                 $query->with('user:id,name')->latest();
             },
-            'ingredients'
+            'ingredients',
+            'images'
         ])->findOrFail($id);
 
         // Track recently viewed for authenticated users

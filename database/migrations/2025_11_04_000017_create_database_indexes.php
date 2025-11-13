@@ -13,7 +13,6 @@ return new class extends Migration
     {
         // Product search and filtering indexes
         Schema::table('products', function (Blueprint $table) {
-            $table->index('category_id');
             $table->index('price');
             $table->index('rating');
             $table->index('is_featured');
@@ -98,7 +97,6 @@ return new class extends Migration
             $table->dropIndex(['is_featured']);
             $table->dropIndex(['rating']);
             $table->dropIndex(['price']);
-            $table->dropIndex(['category_id']);
         });
     }
 };

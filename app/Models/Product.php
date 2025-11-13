@@ -12,42 +12,69 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
+        'category_id',
+        'brand_id',
         'name',
         'slug',
         'description',
         'short_description',
+        'base_price',
+        'original_price',
+        'is_on_sale',
+        'discount_percentage',
         'sku',
-        'price',
-        'sale_price',
-        'cost_price',
+        'barcode',
         'stock_quantity',
-        'stock_status',
         'weight',
         'dimensions',
-        'category_id',
-        'brand',
-        'tags',
-        'images',
-        'featured_image',
+        'ingredients',
+        'how_to_use',
+        'benefits',
+        'warnings',
+        'skin_types',
+        'skin_concerns',
+        'is_vegan',
+        'is_cruelty_free',
+        'is_organic',
+        'is_paraben_free',
+        'is_sulfate_free',
         'is_featured',
+        'is_new_arrival',
+        'is_best_seller',
+        'is_limited_edition',
         'is_active',
         'rating',
         'review_count',
+        'view_count',
+        'purchase_count',
+        'published_at',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'sale_price' => 'decimal:2',
-        'cost_price' => 'decimal:2',
-        'weight' => 'decimal:2',
+        'base_price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'is_on_sale' => 'boolean',
+        'discount_percentage' => 'integer',
+        'stock_quantity' => 'integer',
+        'weight' => 'decimal:3',
         'dimensions' => 'array',
-        'tags' => 'array',
-        'images' => 'array',
+        'skin_types' => 'array',
+        'skin_concerns' => 'array',
+        'is_vegan' => 'boolean',
+        'is_cruelty_free' => 'boolean',
+        'is_organic' => 'boolean',
+        'is_paraben_free' => 'boolean',
+        'is_sulfate_free' => 'boolean',
         'is_featured' => 'boolean',
+        'is_new_arrival' => 'boolean',
+        'is_best_seller' => 'boolean',
+        'is_limited_edition' => 'boolean',
         'is_active' => 'boolean',
         'rating' => 'decimal:2',
         'review_count' => 'integer',
-        'stock_quantity' => 'integer',
+        'view_count' => 'integer',
+        'purchase_count' => 'integer',
+        'published_at' => 'datetime',
     ];
 
     /**
@@ -59,11 +86,27 @@ class Product extends Model
     }
 
     /**
+     * Get the brand that owns the product.
+     */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    /**
      * Get the variants for the product.
      */
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    /**
+     * Get the images for the product.
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class);
     }
 
     /**

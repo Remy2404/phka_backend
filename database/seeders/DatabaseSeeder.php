@@ -46,6 +46,23 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // Create sample brands (avoid duplicates)
+        $brands = [
+            ['name' => 'Phka Beauty', 'slug' => 'phka-beauty', 'is_active' => true],
+            ['name' => 'Phka Cosmetics', 'slug' => 'phka-cosmetics', 'is_active' => true],
+            ['name' => 'Phka Hair Care', 'slug' => 'phka-hair-care', 'is_active' => true],
+        ];
+
+        foreach ($brands as $brand) {
+            DB::table('brands')->updateOrInsert(
+                ['slug' => $brand['slug']],
+                array_merge($brand, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+            );
+        }
+
         // Create sample products (avoid duplicates)
         $products = [
             [
@@ -54,11 +71,10 @@ class DatabaseSeeder extends Seeder
                 'sku' => 'HFC001',
                 'description' => 'Gentle cleanser for all skin types',
                 'short_description' => 'Deep cleansing with hydration',
-                'price' => 25.99,
+                'base_price' => 25.99,
                 'stock_quantity' => 100,
-                'stock_status' => 'in_stock',
                 'category_id' => 1,
-                'brand' => 'Phka Beauty',
+                'brand_id' => 1,
                 'is_active' => true,
                 'rating' => 4.5,
                 'review_count' => 25,
@@ -69,11 +85,10 @@ class DatabaseSeeder extends Seeder
                 'sku' => 'MLRR001',
                 'description' => 'Long-lasting matte lipstick',
                 'short_description' => 'Bold color that lasts all day',
-                'price' => 18.50,
+                'base_price' => 18.50,
                 'stock_quantity' => 75,
-                'stock_status' => 'in_stock',
                 'category_id' => 2,
-                'brand' => 'Phka Cosmetics',
+                'brand_id' => 2,
                 'is_active' => true,
                 'rating' => 4.2,
                 'review_count' => 42,
@@ -84,11 +99,10 @@ class DatabaseSeeder extends Seeder
                 'sku' => 'AOHT001',
                 'description' => 'Nourishing treatment for damaged hair',
                 'short_description' => 'Restores shine and softness',
-                'price' => 32.00,
+                'base_price' => 32.00,
                 'stock_quantity' => 50,
-                'stock_status' => 'in_stock',
                 'category_id' => 3,
-                'brand' => 'Phka Hair Care',
+                'brand_id' => 3,
                 'is_active' => true,
                 'rating' => 4.7,
                 'review_count' => 18,
@@ -120,24 +134,28 @@ class DatabaseSeeder extends Seeder
         // Create sample quiz questions (avoid duplicates)
         $questions = [
             [
-                'quiz_id' => 1,
                 'question' => 'How does your skin feel after washing?',
                 'question_type' => 'single_choice',
                 'options' => json_encode(['Tight and dry', 'Normal', 'Oily', 'Shiny and greasy']),
+                'category' => 'skin_type',
                 'sort_order' => 1,
+                'is_required' => true,
+                'is_active' => true,
             ],
             [
-                'quiz_id' => 1,
                 'question' => 'Do you experience breakouts?',
                 'question_type' => 'single_choice',
                 'options' => json_encode(['Never', 'Rarely', 'Sometimes', 'Frequently']),
+                'category' => 'skin_concerns',
                 'sort_order' => 2,
+                'is_required' => true,
+                'is_active' => true,
             ],
         ];
 
         foreach ($questions as $question) {
             DB::table('quiz_questions')->updateOrInsert(
-                ['quiz_id' => $question['quiz_id'], 'sort_order' => $question['sort_order']],
+                ['question' => $question['question']],
                 array_merge($question, [
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -199,5 +217,8 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
+
+        // Seed app settings
+        $this->call(AppSettingsSeeder::class);
     }
 }

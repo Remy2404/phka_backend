@@ -20,15 +20,25 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
+        'full_name',
         'email',
         'password',
         'phone',
-        'avatar',
+        'avatar_url',
         'birth_date',
         'gender',
         'skin_type',
+        'skin_concerns',
+        'beauty_preferences',
         'loyalty_points',
+        'loyalty_tier',
         'is_active',
+        'is_verified',
+        'google_id',
+        'apple_id',
+        'facebook_id',
     ];
 
     /**
@@ -52,8 +62,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'birth_date' => 'date',
+            'skin_concerns' => 'array',
+            'beauty_preferences' => 'array',
             'loyalty_points' => 'integer',
             'is_active' => 'boolean',
+            'is_verified' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 
