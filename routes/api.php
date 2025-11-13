@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
@@ -101,6 +102,19 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
 
     // Statistics
     Route::get('/stats', [UserController::class, 'stats']);
+});
+
+// Image Upload Routes (Protected)
+Route::middleware('auth:sanctum')->prefix('images')->group(function () {
+    Route::post('/products/{productId}', [ImageController::class, 'uploadProductImages']);
+    Route::post('/reviews/{reviewId}', [ImageController::class, 'uploadReviewImages']);
+    Route::post('/categories/{categoryId}', [ImageController::class, 'uploadCategoryImage']);
+    Route::post('/brands/{brandId}', [ImageController::class, 'uploadBrandLogo']);
+    Route::post('/stores/{storeId}', [ImageController::class, 'uploadStoreImage']);
+    Route::post('/beauty-tips/{tipId}', [ImageController::class, 'uploadBeautyTipImage']);
+    Route::post('/tutorials/{videoId}', [ImageController::class, 'uploadTutorialThumbnail']);
+    Route::delete('/products/{imageId}', [ImageController::class, 'deleteProductImage']);
+    Route::delete('/reviews/{imageId}', [ImageController::class, 'deleteReviewImage']);
 });
 
 // Beauty Features Routes
