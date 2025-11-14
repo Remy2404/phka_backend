@@ -13,10 +13,40 @@ use App\Models\ProductVariant;
 use App\Models\ShoppingCart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Tag(
+ *     name="Orders",
+ *     description="Order management endpoints"
+ * )
+ */
 class OrderController extends Controller
 {
     /**
+     * @OA\Get(
+     *     path="/api/orders",
+     *     tags={"Orders"},
+     *     summary="Get user's orders",
+     *     description="Returns paginated list of user's orders with items and addresses",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated orders list",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     *
      * Get user's orders.
      */
     public function index(Request $request)
@@ -35,6 +65,30 @@ class OrderController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/orders/{orderId}",
+     *     tags={"Orders"},
+     *     summary="Get order details",
+     *     description="Returns detailed information about a specific order",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="orderId",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Order details",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order not found")
+     * )
+     *
      * Get order details.
      */
     public function show(Request $request, $orderId)
@@ -57,6 +111,35 @@ class OrderController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/orders",
+     *     tags={"Orders"},
+     *     summary="Create order from cart",
+     *     description="Create a new order from the user's shopping cart",
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"billing_address_id", "shipping_address_id", "payment_method"},
+     *             @OA\Property(property="billing_address_id", type="integer", example=1),
+     *             @OA\Property(property="shipping_address_id", type="integer", example=1),
+     *             @OA\Property(property="payment_method", type="string", enum={"credit_card","debit_card","paypal"}, example="credit_card"),
+     *             @OA\Property(property="notes", type="string", nullable=true, example="Please handle with care")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Order created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Order created successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Cart is empty or validation failed"),
+     *     @OA\Response(response=500, description="Failed to create order")
+     * )
+     *
      * Create order from cart.
      */
     public function store(CreateOrderRequest $request)
@@ -170,6 +253,31 @@ class OrderController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/orders/{orderId}/cancel",
+     *     tags={"Orders"},
+     *     summary="Cancel order",
+     *     description="Cancel a pending or processing order and restore stock",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="orderId",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Order cancelled successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Order cancelled successfully")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order not found or cannot be cancelled"),
+     *     @OA\Response(response=500, description="Failed to cancel order")
+     * )
+     *
      * Cancel order.
      */
     public function cancel(Request $request, $orderId)
@@ -215,6 +323,39 @@ class OrderController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/orders/{orderId}/tracking",
+     *     tags={"Orders"},
+     *     summary="Get order tracking information",
+     *     description="Returns tracking information for a specific order",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="orderId",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Order tracking information",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="order_number", type="string", example="ORD-2024-000001"),
+     *                 @OA\Property(property="status", type="string", example="shipped"),
+     *                 @OA\Property(property="tracking_number", type="string", nullable=true, example="TRK123456789"),
+     *                 @OA\Property(property="shipped_at", type="string", format="datetime", nullable=true),
+     *                 @OA\Property(property="delivered_at", type="string", format="datetime", nullable=true),
+     *                 @OA\Property(property="estimated_delivery", type="string", format="datetime", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order not found")
+     * )
+     *
      * Get order tracking information.
      */
     public function tracking(Request $request, $orderId)

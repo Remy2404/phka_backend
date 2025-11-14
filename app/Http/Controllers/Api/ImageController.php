@@ -13,10 +13,71 @@ use App\Models\TutorialVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Tag(
+ *     name="Images",
+ *     description="Image upload and management endpoints"
+ * )
+ */
 class ImageController extends Controller
 {
     /**
+     * @OA\Post(
+     *     path="/api/images/products/{productId}",
+     *     tags={"Images"},
+     *     summary="Upload product images",
+     *     description="Upload multiple images for a product (max 10, 5MB each)",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="productId",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"images"},
+     *                 @OA\Property(
+     *                     property="images[]",
+     *                     type="array",
+     *                     @OA\Items(type="string", format="binary"),
+     *                     description="Product images (JPEG, PNG, JPG, WEBP)"
+     *                 ),
+     *                 @OA\Property(property="variant_id", type="integer", nullable=true, description="Product variant ID"),
+     *                 @OA\Property(
+     *                     property="alt_texts[]",
+     *                     type="array",
+     *                     @OA\Items(type="string"),
+     *                     description="Alt texts for images"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="is_primary[]",
+     *                     type="array",
+     *                     @OA\Items(type="boolean"),
+     *                     description="Mark image as primary"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Images uploaded successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Product images uploaded successfully"),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found"),
+     *     @OA\Response(response=422, description="Validation failed")
+     * )
+     *
      * Upload product images.
      */
     public function uploadProductImages(Request $request, $productId)
@@ -306,6 +367,30 @@ class ImageController extends Controller
     }
 
     /**
+     * @OA\Delete(
+     *     path="/api/images/products/{imageId}",
+     *     tags={"Images"},
+     *     summary="Delete product image",
+     *     description="Delete a specific product image",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="imageId",
+     *         in="path",
+     *         required=true,
+     *         description="Product image ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Image deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Product image deleted successfully")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Image not found")
+     * )
+     *
      * Delete product image.
      */
     public function deleteProductImage($imageId)

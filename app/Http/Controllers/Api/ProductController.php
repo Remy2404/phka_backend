@@ -12,10 +12,39 @@ use App\Models\ProductIngredient;
 use App\Models\RecentlyViewed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Tag(
+ *     name="Products",
+ *     description="Browse and filter the product catalog"
+ * )
+ */
 class ProductController extends Controller
 {
     /**
+     * @OA\Get(
+     *     path="/api/products",
+     *     tags={"Products"},
+     *     summary="List available products",
+     *     description="Returns a paginated list of live products with optional filters for category, price, brand, and skin type.",
+     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="category_id", in="query", required=false, description="Filter by category", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="min_price", in="query", required=false, description="Minimum price", @OA\Schema(type="number", format="float")),
+     *     @OA\Parameter(name="max_price", in="query", required=false, description="Maximum price", @OA\Schema(type="number", format="float")),
+     *     @OA\Parameter(name="brand", in="query", required=false, description="Filter by brand name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="skin_type", in="query", required=false, description="Filter by targeted skin type", @OA\Schema(type="string")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of products",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     *
      * Get paginated list of products with filters.
      */
     public function index(Request $request)
@@ -83,6 +112,22 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/products/featured",
+     *     tags={"Products"},
+     *     summary="Get featured products",
+     *     description="Returns a list of featured products that are active and in stock",
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of featured products",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     )
+     * )
+     *
      * Get featured products.
      */
     public function featured(Request $request)
@@ -102,6 +147,30 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/products/{id}",
+     *     tags={"Products"},
+     *     summary="Get product details",
+     *     description="Returns detailed information about a specific product including variants, reviews, and ingredients",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product details",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found")
+     * )
+     *
      * Get product details by ID.
      */
     public function show(Request $request, $id)
@@ -132,6 +201,30 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/products/{id}/variants",
+     *     tags={"Products"},
+     *     summary="Get product variants",
+     *     description="Returns all active variants for a specific product",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product variants",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found")
+     * )
+     *
      * Get product variants.
      */
     public function variants($productId)
@@ -150,6 +243,44 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/products/{id}/reviews",
+     *     tags={"Products"},
+     *     summary="Get product reviews",
+     *     description="Returns paginated reviews for a specific product with optional rating filter",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="rating",
+     *         in="query",
+     *         required=false,
+     *         description="Filter by rating (1-5)",
+     *         @OA\Schema(type="integer", minimum=1, maximum=5)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated product reviews",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found")
+     * )
+     *
      * Get product reviews.
      */
     public function reviews(Request $request, $productId)
@@ -171,6 +302,30 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/products/{id}/similar",
+     *     tags={"Products"},
+     *     summary="Get similar products",
+     *     description="Returns similar products from the same category, ordered by rating",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of similar products",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found")
+     * )
+     *
      * Get similar products.
      */
     public function similar($productId)
@@ -192,6 +347,42 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/categories/{id}/products",
+     *     tags={"Products"},
+     *     summary="Get products by category",
+     *     description="Returns paginated products for a specific category",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Category ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category products",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="category", type="object"),
+     *                 @OA\Property(property="products", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Category not found")
+     * )
+     *
      * Get products by category.
      */
     public function byCategory(Request $request, $categoryId)
@@ -215,6 +406,30 @@ class ProductController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/products/search",
+     *     tags={"Products"},
+     *     summary="Search products",
+     *     description="Search products by name, description, tags, or brand",
+     *     @OA\Parameter(
+     *         name="q",
+     *         in="query",
+     *         required=true,
+     *         description="Search query",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Search results",
+     *         @OA\JsonContent(
+     *             required={"success","data"},
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Search query is required")
+     * )
+     *
      * Search products.
      */
     public function search(Request $request)

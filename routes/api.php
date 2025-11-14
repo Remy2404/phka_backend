@@ -1,10 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BeautyController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CommunityController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\StoreController;
+use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,9 +25,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'profile']);
 
 // Authentication Routes
 Route::prefix('auth')->group(function () {
@@ -49,16 +52,8 @@ Route::prefix('products')->group(function () {
 });
 
 // Category Routes
-Route::prefix('categories')->group(function () {
-    Route::get('/', function () {
-        return response()->json([
-            'success' => true,
-            'data' => \App\Models\Category::active()->orderBy('name')->get()
-        ]);
-    });
-
-    Route::get('/{id}/products', [ProductController::class, 'byCategory']);
-});
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{id}/products', [ProductController::class, 'byCategory']);
 
 // Shopping Cart Routes (Protected)
 Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
@@ -119,241 +114,32 @@ Route::middleware('auth:sanctum')->prefix('images')->group(function () {
 
 // Beauty Features Routes
 Route::prefix('beauty')->group(function () {
-    // Beauty Quizzes
-    Route::get('/quizzes', function () {
-        return response()->json([
-            'success' => true,
-            'data' => \App\Models\BeautyQuiz::active()->with('questions')->get()
-        ]);
-    });
-
-    Route::get('/quizzes/{id}', function ($id) {
-        $quiz = \App\Models\BeautyQuiz::with('questions')->findOrFail($id);
-        return response()->json([
-            'success' => true,
-            'data' => $quiz
-        ]);
-    });
-
-    // Beauty Tips
-    Route::get('/tips', function (Request $request) {
-        $query = \App\Models\BeautyTip::active()->with('creator:id,name');
-
-        if ($request->has('category')) {
-            $query->byCategory($request->category);
-        }
-
-        if ($request->has('difficulty')) {
-            $query->byDifficulty($request->difficulty);
-        }
-
-        $tips = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return response()->json([
-            'success' => true,
-            'data' => $tips
-        ]);
-    });
-
-    Route::get('/tips/{id}', function ($id) {
-        $tip = \App\Models\BeautyTip::with('creator:id,name')->findOrFail($id);
-        $tip->incrementViews();
-
-        return response()->json([
-            'success' => true,
-            'data' => $tip
-        ]);
-    });
-
-    // Tutorial Videos
-    Route::get('/tutorials', function (Request $request) {
-        $query = \App\Models\TutorialVideo::active()->with('creator:id,name');
-
-        if ($request->has('category')) {
-            $query->byCategory($request->category);
-        }
-
-        if ($request->has('difficulty')) {
-            $query->byDifficulty($request->difficulty);
-        }
-
-        $videos = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return response()->json([
-            'success' => true,
-            'data' => $videos
-        ]);
-    });
-
-    Route::get('/tutorials/{id}', function ($id) {
-        $video = \App\Models\TutorialVideo::with('creator:id,name')->findOrFail($id);
-        $video->incrementViews();
-
-        return response()->json([
-            'success' => true,
-            'data' => $video
-        ]);
-    });
+    Route::get('/quizzes', [BeautyController::class, 'quizzes']);
+    Route::get('/quizzes/{id}', [BeautyController::class, 'quizShow']);
+    Route::get('/tips', [BeautyController::class, 'tips']);
+    Route::get('/tips/{id}', [BeautyController::class, 'tipShow']);
+    Route::get('/tutorials', [BeautyController::class, 'tutorials']);
+    Route::get('/tutorials/{id}', [BeautyController::class, 'tutorialShow']);
 });
 
 // Community Routes
 Route::prefix('community')->group(function () {
-    Route::get('/posts', function (Request $request) {
-        $query = \App\Models\CommunityPost::active()->with('user:id,name,avatar');
-
-        if ($request->has('category')) {
-            $query->byCategory($request->category);
-        }
-
-        $posts = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return response()->json([
-            'success' => true,
-            'data' => $posts
-        ]);
-    });
-
-    Route::get('/posts/{id}', function ($id) {
-        $post = \App\Models\CommunityPost::with([
-            'user:id,name,avatar',
-            'comments' => function($query) {
-                $query->with('user:id,name,avatar')->active()->orderBy('created_at');
-            }
-        ])->findOrFail($id);
-
-        $post->incrementViews();
-
-        return response()->json([
-            'success' => true,
-            'data' => $post
-        ]);
-    });
+    Route::get('/posts', [CommunityController::class, 'posts']);
+    Route::get('/posts/{id}', [CommunityController::class, 'postShow']);
 });
 
 // Support Routes
 Route::prefix('support')->group(function () {
-    // FAQs
-    Route::get('/faqs', function (Request $request) {
-        $query = \App\Models\FAQ::active();
-
-        if ($request->has('category')) {
-            $query->byCategory($request->category);
-        }
-
-        if ($request->has('search')) {
-            $query->search($request->search);
-        }
-
-        $faqs = $query->ordered()->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $faqs
-        ]);
-    });
-
-    // Support Tickets (Protected)
-    Route::middleware('auth:sanctum')->prefix('tickets')->group(function () {
-        Route::get('/', function (Request $request) {
-            $tickets = $request->user()->supportTickets()
-                ->with('assignedAgent:id,name')
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            return response()->json([
-                'success' => true,
-                'data' => $tickets
-            ]);
-        });
-
-        Route::post('/', function (Request $request) {
-            $validated = $request->validate([
-                'subject' => 'required|string|max:255',
-                'description' => 'required|string',
-                'category' => 'required|string',
-                'priority' => 'required|in:low,medium,high,urgent',
-                'order_id' => 'nullable|exists:orders,id',
-                'product_id' => 'nullable|exists:products,id',
-            ]);
-
-            $ticket = \App\Models\SupportTicket::create([
-                'user_id' => $request->user()->id,
-                'subject' => $validated['subject'],
-                'description' => $validated['description'],
-                'category' => $validated['category'],
-                'priority' => $validated['priority'],
-                'status' => 'open',
-                'order_id' => $validated['order_id'] ?? null,
-                'product_id' => $validated['product_id'] ?? null,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Support ticket created successfully',
-                'data' => $ticket
-            ], 201);
-        });
-
-        Route::get('/{id}', function (Request $request, $id) {
-            $ticket = $request->user()->supportTickets()
-                ->with(['messages.user:id,name', 'assignedAgent:id,name'])
-                ->findOrFail($id);
-
-            return response()->json([
-                'success' => true,
-                'data' => $ticket
-            ]);
-        });
-
-        Route::post('/{id}/messages', function (Request $request, $id) {
-            $ticket = $request->user()->supportTickets()->findOrFail($id);
-
-            $validated = $request->validate([
-                'message' => 'required|string',
-            ]);
-
-            $message = \App\Models\SupportMessage::create([
-                'ticket_id' => $ticket->id,
-                'user_id' => $request->user()->id,
-                'message' => $validated['message'],
-                'is_internal' => false,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'data' => $message->load('user:id,name')
-            ], 201);
-        });
+    Route::get('/faqs', [SupportController::class, 'faqs']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/tickets', [SupportController::class, 'tickets']);
+        Route::post('/tickets', [SupportController::class, 'createTicket']);
+        Route::get('/tickets/{id}', [SupportController::class, 'ticketShow']);
+        Route::post('/tickets/{id}/messages', [SupportController::class, 'addMessage']);
     });
 });
 
 // Store Locations
-Route::get('/stores', function (Request $request) {
-    $query = \App\Models\Store::active();
-
-    if ($request->has('search')) {
-        $query->search($request->search);
-    }
-
-    if ($request->has(['latitude', 'longitude'])) {
-        $query->withinRadius($request->latitude, $request->longitude);
-    }
-
-    $stores = $query->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $stores
-    ]);
-});
-
-Route::get('/stores/{id}', function ($id) {
-    $store = \App\Models\Store::with(['products' => function($query) {
-        $query->active()->inStock()->limit(10);
-    }])->findOrFail($id);
-
-    return response()->json([
-        'success' => true,
-        'data' => $store
-    ]);
-});
+Route::get('/stores', [StoreController::class, 'index']);
+Route::get('/stores/{id}', [StoreController::class, 'show']);
