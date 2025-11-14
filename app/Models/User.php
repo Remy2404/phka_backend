@@ -24,6 +24,7 @@ class User extends Authenticatable
         'last_name',
         'full_name',
         'email',
+        'role',
         'password',
         'phone',
         'avatar_url',
@@ -141,5 +142,53 @@ class User extends Authenticatable
     public function supportTickets()
     {
         return $this->hasMany(SupportTicket::class);
+    }
+
+    /**
+     * Check if user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'super_admin']);
+    }
+
+    /**
+     * Check if user is a super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Check if user is a customer.
+     */
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    /**
+     * Check if user has a specific role.
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Scope query to only include admin users.
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->whereIn('role', ['admin', 'super_admin']);
+    }
+
+    /**
+     * Scope query to only include customer users.
+     */
+    public function scopeCustomers($query)
+    {
+        return $query->where('role', 'customer');
     }
 }
